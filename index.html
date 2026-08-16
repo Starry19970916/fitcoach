@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="FitCoach">
+<meta name="theme-color" content="#0f1420">
+<link rel="apple-touch-icon" href="icon.svg">
+<title>FitCoach 健身助手</title>
+<style>
+:root{--bg:#0f1420;--card:#1a2233;--card2:#222d44;--pri:#4ade80;--pri2:#22d3ee;--txt:#e8edf5;--sub:#8b96ab;--warn:#fbbf24;--red:#f87171;--orange:#fb923c;--r:16px}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{background:var(--bg);color:var(--txt);font-family:-apple-system,"PingFang SC","Helvetica Neue",Arial,sans-serif;padding-bottom:calc(66px + env(safe-area-inset-bottom));min-height:100vh}
+header{padding:calc(14px + env(safe-area-inset-top)) 18px 10px;display:flex;align-items:center;justify-content:space-between}
+header h1{font-size:20px}header h1 span{color:var(--pri)}
+.date{color:var(--sub);font-size:12px}
+main{padding:8px 16px}
+.view{display:none;animation:fade .25s}.view.on{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1}}
+.card{background:var(--card);border-radius:var(--r);padding:16px;margin-bottom:14px;border:1px solid #ffffff10}
+.card h3{font-size:15px;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.sub{color:var(--sub);font-size:12.5px;line-height:1.6}
+.btn{display:block;width:100%;padding:13px;border:none;border-radius:12px;background:linear-gradient(135deg,var(--pri),var(--pri2));color:#06281a;font-weight:700;font-size:15px;cursor:pointer;margin-top:10px}
+.btn.ghost{background:var(--card2);color:var(--txt);font-weight:500}
+.btn.small{width:auto;padding:8px 14px;font-size:13px;margin-top:0;display:inline-block}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+.chip{padding:8px 14px;border-radius:999px;background:var(--card2);font-size:13px;cursor:pointer;border:1.5px solid transparent;color:var(--sub)}
+.chip.sel{border-color:var(--pri);color:var(--pri);background:#4ade8015}
+label{display:block;font-size:13px;color:var(--sub);margin:12px 0 6px}
+input,select{width:100%;padding:11px 12px;border-radius:10px;border:1px solid #ffffff1a;background:var(--card2);color:var(--txt);font-size:14px}
+nav{position:fixed;bottom:0;left:0;right:0;background:#131b2bee;backdrop-filter:blur(12px);display:flex;border-top:1px solid #ffffff12;padding-bottom:env(safe-area-inset-bottom);z-index:50}
+nav button{flex:1;background:none;border:none;color:var(--sub);padding:9px 0 7px;font-size:11px;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer}
+nav button.on{color:var(--pri)}
+nav .ic{font-size:20px}
+.day{background:var(--card2);border-radius:12px;padding:12px;margin-bottom:8px}
+.day .dh{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.day .dh b{font-size:14px}.tag{font-size:11px;padding:3px 9px;border-radius:99px;background:#4ade8022;color:var(--pri)}
+.tag.rest{background:#ffffff14;color:var(--sub)}
+.exitem{display:flex;align-items:center;gap:8px;padding:7px 0;border-top:1px dashed #ffffff10;font-size:13.5px}
+.exitem:first-of-type{border-top:none}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.exc{cursor:pointer;transition:.2s}.exc:active{transform:scale(.97)}
+.exc svg{width:100%;height:110px;background:#0d1220;border-radius:10px;margin-bottom:8px}
+.exc b{font-size:13.5px;display:block}.exc .sub{font-size:11.5px}
+.stat{display:flex;justify-content:space-around;text-align:center;padding:6px 0}
+.stat b{font-size:22px;color:var(--pri);display:block}
+.stat span{font-size:11.5px;color:var(--sub)}
+.meal{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px dashed #ffffff10;font-size:13.5px}
+.meal .k{color:var(--sub);font-size:11px}
+.meal .del{color:var(--red);cursor:pointer;padding:2px 8px;font-size:16px}
+.bar{height:10px;border-radius:99px;background:var(--card2);overflow:hidden;margin:8px 0 4px;display:flex}
+.bar i{display:block;height:100%;transition:.4s}
+.sug{font-size:13px;padding:10px 12px;background:var(--card2);border-radius:10px;margin-bottom:8px;line-height:1.55}
+.sug b{color:var(--pri)}
+.modal{position:fixed;inset:0;background:#000a;z-index:99;display:none;align-items:flex-end}
+.modal.on{display:flex}
+.sheet{background:var(--card);width:100%;max-height:88vh;overflow-y:auto;border-radius:20px 20px 0 0;padding:20px;padding-bottom:calc(24px + env(safe-area-inset-bottom))}
+.sheet svg{width:100%;background:#0d1220;border-radius:12px;margin:10px 0}
+.sheet h3{font-size:18px}
+.steps{font-size:13.5px;line-height:1.9;padding-left:4px}
+.steps li{margin-left:18px}
+.warnbox{background:#fbbf2418;border:1px solid #fbbf2440;color:var(--warn);font-size:12.5px;padding:10px 12px;border-radius:10px;margin-top:10px;line-height:1.6}
+.close{float:right;background:var(--card2);border:none;color:var(--txt);width:32px;height:32px;border-radius:50%;font-size:15px;cursor:pointer}
+canvas{width:100%;border-radius:14px;border:1px solid #ffffff15}
+.toast{position:fixed;top:calc(12px + env(safe-area-inset-top));left:50%;transform:translateX(-50%);background:var(--pri);color:#06281a;font-weight:700;padding:10px 20px;border-radius:99px;font-size:13.5px;z-index:200;display:none;white-space:nowrap}
+.kbd{background:var(--card2);padding:2px 8px;border-radius:6px;font-size:12px}
+/* 训练执行模式 */
+.setdot{width:34px;height:34px;border-radius:10px;border:2px solid var(--sub);display:inline-flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:var(--sub);cursor:pointer;margin-right:6px}
+.setdot.done{background:var(--pri);border-color:var(--pri);color:#06281a}
+.trrow{background:var(--card2);border-radius:12px;padding:14px;margin-bottom:10px}
+.trrow .nm{font-size:15px;font-weight:600;display:flex;justify-content:space-between;align-items:center}
+.trrow .pr{color:var(--pri2);font-size:12px}
+.restbtn{font-size:12px;padding:6px 12px;border-radius:99px;background:#22d3ee22;color:var(--pri2);border:none;cursor:pointer}
+#timerOverlay{position:fixed;inset:0;background:#000d;z-index:150;display:none;align-items:center;justify-content:center;flex-direction:column}
+#timerOverlay.on{display:flex}
+#timerNum{font-size:96px;font-weight:800;color:var(--pri)}
+.streak{background:linear-gradient(135deg,#f59e0b22,#ef444422);border:1px solid #f59e0b44;border-radius:var(--r);padding:14px 16px;margin-bottom:14px;display:flex;align-items:center;gap:12px}
+.streak b{font-size:26px;color:var(--warn)}
+.macro{display:flex;gap:6px;margin-top:8px}
+.macro div{flex:1;background:var(--card2);border-radius:10px;padding:8px;text-align:center}
+.macro b{display:block;font-size:15px}
+.wrow{display:flex;justify-content:space-between;font-size:13px;padding:6px 0;border-bottom:1px dashed #ffffff10}
+.big-cta{font-size:17px;padding:16px}
+</style>
+</head>
+<body>
+<div class="toast" id="toast"></div>
+<div id="timerOverlay"><div class="sub" style="font-size:15px">组间休息</div><div id="timerNum">60</div><div style="display:flex;gap:10px;margin-top:20px"><button class="btn small ghost" onclick="addRest(15)">+15s</button><button class="btn small" onclick="skipRest()">跳过 ▶</button></div></div>
+<header><h1>Fit<span>Coach</span> 🦞</h1><div class="date" id="todayStr"></div></header>
+<main>
+<!-- ===== 今日 ===== -->
+<div class="view on" id="v-home">
+  <div class="streak" id="streakBox"></div>
+  <div class="card" id="todayTrainCard"></div>
+  <div class="card"><h3>⚡ 今日概览</h3><div class="stat" id="homeStat"></div></div>
+  <div class="card"><h3>⚖️ 快速记录体重</h3>
+    <div style="display:flex;gap:8px"><input id="quickW" type="number" step="0.1" placeholder="今日体重 kg"><button class="btn small" style="height:42px" onclick="logWeight()">记录</button></div>
+    <div id="wTrend" style="margin-top:10px"></div>
+  </div>
+  <div class="card"><h3>🎉 分享打卡</h3>
+    <div class="sub" style="margin-bottom:10px">生成今日成果图，长按保存/分享。</div>
+    <button class="btn" onclick="genCard()">生成打卡图片</button>
+    <div style="margin-top:12px"><canvas id="shareCv" width="750" height="1050" style="display:none"></canvas><img id="shareImg" style="width:100%;border-radius:14px;display:none"></div>
+    <button class="btn ghost" id="dlBtn" style="display:none" onclick="dlCard()">⬇️ 保存到相册</button>
+  </div>
+</div>
+<!-- ===== 训练 ===== -->
+<div class="view" id="v-train">
+  <div id="planSetup"></div>
+  <div id="trainView"></div>
+</div>
+<!-- ===== 动作 ===== -->
+<div class="view" id="v-ex">
+  <div class="card"><h3>🏋️ 动作库 · 按部位</h3><div class="sub">选择想练的部位；点开动作有动图演示、发力肌肉解剖图与器械使用说明。</div></div>
+  <div class="card"><div class="row" id="partRow"></div></div>
+  <div id="exList"></div>
+</div>
+<!-- ===== 饮食 ===== -->
+<div class="view" id="v-diet">
+  <div class="card">
+    <h3>🔥 今日热量</h3>
+    <div class="stat">
+      <div><b id="kIn">0</b><span>已摄入 kcal</span></div>
+      <div><b id="kTarget">2000</b><span>目标 kcal</span></div>
+      <div><b id="kLeft">2000</b><span>剩余 kcal</span></div>
+    </div>
+    <div class="bar"><i id="kBar" style="width:0%;background:linear-gradient(90deg,var(--pri),var(--pri2))"></i></div>
+    <div class="sub" id="kTip"></div>
+    <div class="macro" id="macroBox"></div>
+  </div>
+  <div class="card">
+    <h3>🍚 记录一餐</h3>
+    <div class="row" id="mealTypeRow"></div>
+    <label>选择常见食物（可多选后点添加）</label>
+    <div class="row" id="foodRow" style="max-height:170px;overflow-y:auto"></div>
+    <label>或手动输入（名称 + 热量 kcal）</label>
+    <div style="display:flex;gap:8px">
+      <input id="mName" placeholder="如：麻辣烫" style="flex:2">
+      <input id="mKcal" placeholder="kcal" type="number" style="flex:1">
+    </div>
+    <button class="btn" onclick="addMeal()">添加记录</button>
+    <button class="btn ghost" onclick="copyYesterday()">📋 复制昨天的饮食</button>
+  </div>
+  <div class="card"><h3>📋 今日已吃</h3><div id="mealList"><div class="sub">还没有记录，先添加一餐吧～</div></div></div>
+  <div class="card">
+    <h3>💡 吃什么的建议</h3>
+    <div class="row" style="margin-bottom:10px">
+      <div class="chip sel" onclick="showSug('out',this)">🥡 点外卖</div>
+      <div class="chip" onclick="showSug('cook',this)">🍳 自己做</div>
+    </div>
+    <div id="sugBox"></div>
+  </div>
+</div>
+<!-- ===== 我的 ===== -->
+<div class="view" id="v-me">
+  <div class="card">
+    <h3>👤 我的身体数据</h3>
+    <label>身高（cm，用于计算 BMI）</label>
+    <input id="uHeight" type="number" placeholder="如 170">
+    <label>每日热量目标（kcal，留空自动计算）</label>
+    <input id="uTarget" type="number" placeholder="自动">
+    <button class="btn" onclick="saveUser()">保存</button>
+    <div id="bmiBox" style="margin-top:10px"></div>
+  </div>
+  <div class="card"><h3>⚖️ 体重记录</h3><div id="wList"></div></div>
+  <div class="card"><h3>📆 近 7 天回顾</h3><div id="weekList"></div></div>
+  <div class="card">
+    <h3>📲 安装到 iPhone</h3>
+    <div class="steps" style="line-height:2">
+      <li>用 <b>Safari</b> 打开本页面（必须 Safari）</li>
+      <li>点底部 <span class="kbd">分享</span> 按钮</li>
+      <li>选 <span class="kbd">添加到主屏幕</span></li>
+      <li>桌面出现 <b>FitCoach</b> 图标，全屏使用</li>
+    </div>
+  </div>
+  <div class="card"><h3>💾 数据备份</h3>
+    <div class="sub" style="margin-bottom:6px">数据只存在本机。换手机/清缓存前请先导出备份。</div>
+    <button class="btn" onclick="exportData()">⬇️ 导出全部数据</button>
+    <label>导入备份（粘贴 JSON）</label>
+    <input id="impBox" placeholder='{"plan":...}'>
+    <button class="btn ghost" onclick="importData()">导入</button>
+  </div>
+  <div class="card"><h3>⚙️ 其他</h3>
+    <button class="btn ghost" onclick="if(confirm('确定清空全部数据？')){localStorage.clear();location.reload()}">清空所有数据</button>
+  </div>
+  <div class="sub" style="text-align:center;padding:10px 0 20px">FitCoach v2.0 · 数据仅存于本机 · 运动有风险，量力而行</div>
+</div>
+</main>
+<nav>
+  <button class="on" onclick="go('home',this)"><span class="ic">🏠</span>今日</button>
+  <button onclick="go('train',this)"><span class="ic">🏋️</span>训练</button>
+  <button onclick="go('ex',this)"><span class="ic">📖</span>动作</button>
+  <button onclick="go('diet',this)"><span class="ic">🍚</span>饮食</button>
+  <button onclick="go('me',this)"><span class="ic">👤</span>我的</button>
+</nav>
+<div class="modal" id="modal" onclick="if(event.target===this)closeModal()"><div class="sheet" id="sheet"></div></div>
+<script>
+/* ============ 动作库（22个） ============ */
+const EXERCISES={
+ fly:{n:"哑铃飞鸟",eq:"哑铃",part:"胸",kcal:6,svg:"fly",steps:["仰卧凳上或站立微屈髋，双手持哑铃于胸前","掌心相对，手臂微屈固定角度","像拥抱大树一样向两侧打开","下放到胸有拉伸感后夹胸收回"],tips:"手肘角度全程不变，不要做成推举；重量轻一些，感受胸肌拉伸与挤压。"},
+ cablefly:{n:"绳索夹胸",eq:"器械·健身房",part:"胸",kcal:6,svg:"fly",steps:["两侧滑轮调至肩以上，双手握把","双脚前后站，身体微前倾","手臂微屈向胸前下方合拢","控制回放感受拉伸"],tips:"胸肌中缝雕刻动作；重量不用大。"},
+ flymachine:{n:"蝴蝶机夹胸",eq:"器械·健身房",part:"胸",kcal:6,svg:"fly",steps:["调整座椅使把手与胸同高","双臂贴住挡垫，手肘微屈","胸肌发力向中间夹拢","顶峰挤压1秒后缓慢放回"],tips:"新手友好；放回时不要完全泄力。"},
+ pushup:{n:"俯卧撑",eq:"徒手",part:"胸",kcal:7,svg:"pushup",steps:["双手略宽于肩撑地，身体成一条直线","屈肘下放至胸近地面","发力推起，全程核心收紧","做不了标准可做跪姿俯卧撑"],tips:"不要塌腰翘臀；每组力竭前留1-2个余量。"},
+ latraise:{n:"侧平举",eq:"哑铃",part:"肩",kcal:5,svg:"latraise",steps:["站立，双手持哑铃垂于体侧","手臂微屈，向两侧抬起至与肩平","顶峰停顿1秒，缓慢下放","不要用惯性甩起"],tips:"练肩经典动作；重量宁轻勿重，耸肩就说明太重了；可用矿泉水瓶替代。"},
+ shoulderpress2:{n:"阿诺德推举",eq:"哑铃",part:"肩",kcal:6,svg:"press",steps:["哑铃举在肩前，掌心朝自己","上推的同时旋转手腕至掌心朝前","顶端手臂近伸直","下放时反向旋转回到起始"],tips:"兼顾肩前中束；核心收紧不要后仰。"},
+ press:{n:"哑铃推举",eq:"哑铃",part:"肩",kcal:6,svg:"press",steps:["坐或站，哑铃举至肩高","垂直向上推起至手臂近伸直","缓慢下放回肩高"],tips:"手腕保持中立；重量宁轻勿重，避免耸肩借力。"},
+ pulldown:{n:"高位下拉",eq:"器械·健身房",part:"背",kcal:7,svg:"row",steps:["调整腿垫固定大腿，宽握横杆","身体微后仰，背阔肌发力下拉至上胸","顶峰收缩1秒","控制速度缓慢回放"],tips:"不要借力猛甩；先请教练演示坐姿和握距。"},
+ row:{n:"哑铃划船",eq:"哑铃",part:"背",kcal:7,svg:"row",steps:["一手一膝撑凳上，背平直","另一手持哑铃自然下垂","肘贴身体向后上方拉起","顶峰收缩1秒后缓慢下放"],tips:"用背发力而不是甩手臂；可用装水矿泉水瓶替代哑铃。"},
+ curl:{n:"哑铃弯举",eq:"哑铃",part:"手臂",kcal:4,svg:"curl",steps:["站立，哑铃垂于体侧，掌心朝前","屈肘将哑铃举向肩部","大臂贴住身体不晃动","顶峰收缩后缓慢下放"],tips:"练肱二头肌；身体不要前后摆借力。"},
+ pullover:{n:"哑铃臂屈伸",eq:"哑铃",part:"手臂",kcal:5,svg:"crunch",steps:["坐或站，双手握一只哑铃举过头顶","屈肘将哑铃缓慢放至颈后","大臂保持不动贴近耳侧","伸肘发力举回头顶"],tips:"主要练肱三头肌；肘不要外张。"},
+ squat:{n:"深蹲",eq:"徒手",part:"臀腿",kcal:8,svg:"squat",steps:["双脚与肩同宽，脚尖略外八","屈髋屈膝下蹲，想象往后坐椅子","大腿蹲至与地面平行，膝盖方向与脚尖一致","脚跟发力蹬地站起"],tips:"膝盖不要内扣；新手可扶椅背做半蹲。"},
+ lunge:{n:"弓步蹲",eq:"徒手/哑铃",part:"臀腿",kcal:8,svg:"lunge",steps:["一脚向前迈一大步","垂直下蹲至前后膝约90°","前脚发力回到起始位","左右交替"],tips:"上身保持直立，重心在两脚之间。"},
+ deadlift:{n:"哑铃硬拉",eq:"哑铃",part:"臀腿",kcal:9,svg:"deadlift",steps:["双脚与髋同宽，哑铃置于脚前","屈髋俯身，背保持平直","臀腿发力将哑铃沿小腿拉起","站直后夹臀，缓慢下放"],tips:"练后侧链王牌动作；弓腰立刻减重。"},
+ calf:{n:"提踵",eq:"徒手/哑铃",part:"臀腿",kcal:4,svg:"calf",steps:["站立，前脚掌踩在台阶边缘","脚跟缓慢下放到有拉伸感","发力踮脚到最高点","顶峰停顿1秒"],tips:"练小腿；可做单侧增加难度。"},
+ legpress:{n:"坐姿腿举",eq:"器械·健身房",part:"臀腿",kcal:8,svg:"squat",steps:["背靠坐垫，双脚与肩同宽踩住踏板","屈膝下放至大腿约90°","脚掌发力蹬起，膝不锁死","匀速控制全程"],tips:"重量循序渐进；膝盖与脚尖同向。"},
+ glute:{n:"臀桥",eq:"徒手",part:"臀腿",kcal:5,svg:"glute",steps:["仰卧屈膝，脚踩地","臀部发力顶起至肩髋膝一线","顶峰夹臀1秒","缓慢下放"],tips:"久坐人群必练，改善腰背酸痛。"},
+ plank:{n:"平板支撑",eq:"徒手",part:"核心",kcal:5,svg:"plank",steps:["前臂撑地，肘在肩正下方","身体从头到脚一条直线","收紧腹部与臀部","保持均匀呼吸 30-60 秒"],tips:"塌腰就立刻停止休息，宁短勿滥。"},
+ crunch:{n:"卷腹",eq:"徒手",part:"核心",kcal:5,svg:"crunch",steps:["仰卧屈膝，手轻触耳侧","用上腹力量卷起肩胛离地","下背始终贴地","缓慢下放"],tips:"不要抱头拉脖子；感受腹部收缩。"},
+ climb:{n:"登山跑",eq:"徒手",part:"核心",kcal:10,svg:"climb",steps:["俯卧撑起始姿势，身体一条直线","交替快速提膝向胸部","臀部保持低位","保持呼吸节奏 30-60 秒"],tips:"有氧+核心双效；腰不要塌。"},
+ rope:{n:"跳绳",eq:"跳绳",part:"有氧/全身",kcal:12,svg:"rope",steps:["绳长：踩住绳柄到腋下为宜","前脚掌着地，跳起2-3cm即可","手腕摇绳而非整条手臂","分组进行，如1分钟×10组"],tips:"体重较大或膝盖不适者改用快走；穿缓震鞋。"},
+ burpee:{n:"波比跳",eq:"徒手",part:"有氧/全身",kcal:14,svg:"burpee",steps:["站立下蹲，双手撑地","双脚后跳成俯卧撑姿势，做一个俯卧撑","收腿跳回，向上纵跳拍手","连贯重复"],tips:"高效燃脂但强度大，膝盖/腰椎不好改做无跳跃版。"},
+ bike:{n:"动感单车/骑行",eq:"器械·健身房",part:"有氧/全身",kcal:10,svg:"bike",steps:["车座高度≈站立时髋部高度","阻力调到微喘但能说话","保持30-40分钟","结束慢骑5分钟放松"],tips:"膝盖对准脚尖方向；健身房器械使用前请教练演示一次。"},
+ treadmill:{n:"跑步机",eq:"器械·健身房",part:"有氧/全身",kcal:9,svg:"treadmill",steps:["先站上两侧踏板再启动","速度从慢走开始逐步加快","坡度1-2更保护膝盖","结束前逐渐减速"],tips:"务必夹好安全夹；不要跨站在运行的跑带上。"}
+};
+/* ============ 食物库（含三大营养素） [kcal, 蛋白g, 碳水g, 脂肪g] ============ */
+const FOODS={"米饭(1碗)":[230,4,50,0.5],"杂粮饭(1碗)":[200,5,42,1],"面条(1碗)":[280,8,56,1],"全麦面包(2片)":[160,8,28,2],"鸡胸肉(100g)":[133,25,0,3],"鸡蛋(1个)":[75,6,0.5,5],"牛奶(250ml)":[150,8,12,8],"无糖酸奶":[90,5,10,2],"苹果(1个)":[95,0.5,25,0],"香蕉(1根)":[105,1,27,0],"西兰花(1份)":[45,4,6,0.5],"沙拉(无酱)":[60,3,8,2],"牛肉(100g)":[180,22,0,10],"三文鱼(100g)":[200,20,0,13],"豆腐(1块)":[80,8,3,4],"玉米(1根)":[110,4,23,1],"红薯(1个)":[130,2,30,0],"燕麦(50g)":[190,7,32,4],"黄焖鸡米饭":[750,30,90,28],"麻辣烫":[600,25,60,28],"轻食沙拉套餐":[380,28,35,12],"牛肉面":[550,25,70,18],"麦当劳巨无霸":[550,26,42,30],"奶茶(中杯)":[400,2,60,16],"咖啡拿铁":[180,9,14,9],"寿司(8枚)":[350,12,60,6],"饺子(10个)":[450,16,55,18],"麻辣烫(清汤少丸)":[420,20,45,16],"健身餐外卖":[450,35,45,12],"火锅(人均)":[900,35,60,55]};
+const SUG={
+ out:{cut:["<b>轻食沙拉+鸡胸</b>（约400kcal）：备注酱料另放","<b>清汤麻辣烫</b>：多蔬菜+豆制品+瘦肉，少丸子粉丝（约450kcal）","<b>日式照烧鸡腿饭</b>：米饭减半（约500kcal）","<b>潮汕牛肉汤粉</b>：清汤少油（约480kcal）"],
+  bulk:["<b>黄焖鸡米饭</b>+一份青菜（约800kcal）","<b>牛肉拉面</b>+卤蛋+牛肉（约750kcal）","<b>日式咖喱鸡排饭</b>（约800kcal）","<b>粤式烧腊四宝饭</b>（约780kcal）"],
+  keep:["<b>轻食套餐</b>（约400kcal）","<b>寿司8枚+味噌汤</b>（约420kcal）","<b>麻辣烫荤素均衡版</b>（约550kcal）","<b>蒸饺10个+凉拌菜</b>（约500kcal）"]},
+ cook:{cut:["<b>香煎鸡胸+西兰花+杂粮饭</b>（约450kcal，20分钟）","<b>虾仁滑蛋+凉拌黄瓜+半碗米饭</b>（约420kcal）","<b>番茄龙利鱼汤+蒸红薯</b>（约380kcal）","<b>鸡胸沙拉配油醋汁</b>（约350kcal，10分钟）"],
+  bulk:["<b>番茄炖牛腩+米饭</b>（约700kcal，周末炖一锅）","<b>鸡腿饭+煎蛋+烫青菜</b>（约750kcal）","<b>三文鱼+杂粮饭+芦笋</b>（约680kcal）","<b>牛肉炒面+酸奶</b>（约720kcal）"],
+  keep:["<b>一荤一素一汤+米饭</b>（约600kcal）","<b>咖喱鸡肉饭</b>（约650kcal）","<b>蒸鱼+时蔬+米饭</b>（约550kcal）","<b>鸡蛋蔬菜三明治+牛奶</b>（约480kcal，早餐优选）"]}};
+/* ============ 肌肉解剖数据 ============ */
+const EX_MUSCLE={
+ fly:{pm:["胸大肌"],sm:["三角肌"]},flymachine:{pm:["胸大肌"],sm:["三角肌"]},cablefly:{pm:["胸大肌"],sm:["三角肌"]},
+ pushup:{pm:["胸大肌"],sm:["三角肌","肱三头肌"]},
+ latraise:{pm:["三角肌"],sm:["斜方肌"]},shoulderpress2:{pm:["三角肌"],sm:["肱三头肌","斜方肌"]},press:{pm:["三角肌"],sm:["肱三头肌"]},
+ pulldown:{pm:["背阔肌"],sm:["肱二头肌","斜方肌"]},row:{pm:["背阔肌"],sm:["肱二头肌","斜方肌"]},
+ curl:{pm:["肱二头肌"],sm:[]},pullover:{pm:["肱三头肌"],sm:["背阔肌"]},
+ squat:{pm:["股四头肌","臀大肌"],sm:["腘绳肌"]},lunge:{pm:["臀大肌","股四头肌"],sm:["腘绳肌"]},
+ deadlift:{pm:["腘绳肌","臀大肌"],sm:["背阔肌","斜方肌"]},calf:{pm:["小腿三头肌"],sm:[]},legpress:{pm:["股四头肌","臀大肌"],sm:["腘绳肌"]},
+ glute:{pm:["臀大肌"],sm:["腘绳肌"]},
+ plank:{pm:["腹直肌"],sm:["三角肌","臀大肌"]},crunch:{pm:["腹直肌"],sm:[]},climb:{pm:["腹直肌","股四头肌"],sm:["三角肌"]},
+ rope:{pm:["小腿三头肌","股四头肌"],sm:["腹直肌"]},burpee:{pm:["股四头肌","胸大肌"],sm:["腹直肌","三角肌"]},
+ bike:{pm:["股四头肌","小腿三头肌"],sm:["臀大肌"]},treadmill:{pm:["股四头肌","小腿三头肌"],sm:["腘绳肌"]}};
+const MUSCLE_POS={
+ "胸大肌":[[85,102,17,12],[115,102,17,12]],
+ "三角肌":[[61,80,10,15],[139,80,10,15],[261,80,10,15],[339,80,10,15]],
+ "肱二头肌":[[47,116,8,17],[153,116,8,17]],
+ "腹直肌":[[100,142,13,24]],
+ "股四头肌":[[83,215,12,25],[117,215,12,25]],
+ "斜方肌":[[300,80,17,14]],
+ "背阔肌":[[280,116,14,20],[320,116,14,20]],
+ "肱三头肌":[[247,116,8,17],[353,116,8,17]],
+ "臀大肌":[[287,176,14,14],[313,176,14,14]],
+ "腘绳肌":[[284,220,11,22],[316,220,11,22]],
+ "小腿三头肌":[[286,256,10,18],[314,256,10,18]]};
+/* ============ 状态 ============ */
+const today=new Date().toISOString().slice(0,10);
+function dstr(off){const d=new Date();d.setDate(d.getDate()+off);return d.toISOString().slice(0,10)}
+const S=JSON.parse(localStorage.getItem("fitcoach_v2")||"{}");
+function save(){localStorage.setItem("fitcoach_v2",JSON.stringify(S))}
+function toast(m){const t=document.getElementById("toast");t.textContent=m;t.style.display="block";setTimeout(()=>t.style.display="none",1800)}
+document.getElementById("todayStr").textContent=new Date().toLocaleDateString("zh-CN",{month:"long",day:"numeric",weekday:"long"});
+/* ============ 导航 ============ */
+function go(v,btn){document.querySelectorAll(".view").forEach(e=>e.classList.remove("on"));document.getElementById("v-"+v).classList.add("on");document.querySelectorAll("nav button").forEach(b=>b.classList.remove("on"));btn.classList.add("on");
+ if(v==="home")renderHome();if(v==="diet")renderDiet();if(v==="me")renderMe();}
+/* ============ 计划制定 ============ */
+let setup={job:null,days:null,mins:null,goal:null,equip:null};
+const Q=[["job","你的工作节奏？",[["sit","💺 久坐办公"],["stand","🧍 站立/走动多"],["phys","🛠️ 体力工作"]]],
+ ["days","每周能练几天？",[["2","2天"],["3","3天"],["4","4天"],["5","5天以上"]]],
+ ["mins","每次能练多久？",[["20","20分钟"],["30","30分钟"],["45","45分钟"],["60","60分钟以上"]]],
+ ["goal","健身目标？",[["cut","🔥 减脂"],["bulk","💪 增肌"],["keep","🌿 保持健康/塑形"]]],
+ ["equip","有什么器械条件？",[["none","🏠 徒手/居家"],["db","🏋️ 有哑铃/跳绳"],["gym","🏢 健身房"]]]];
+function renderSetup(){
+ let h='<div class="card"><h3>📝 定制你的健身计划</h3><div class="sub" style="margin-bottom:6px">回答 5 个问题，根据你的工作生活节奏自动生成一周计划（含组数×次数处方）。</div>';
+ Q.forEach(([k,q,opts])=>{h+=`<label>${q}</label><div class="row">`+opts.map(([v,t])=>`<div class="chip${setup[k]===v?" sel":""}" onclick="setup['${k}']='${v}';renderSetup()">${t}</div>`).join("")+"</div>"});
+ h+='<button class="btn" onclick="genPlan()">生成我的计划</button></div>';
+ document.getElementById("planSetup").innerHTML=h;
+}
+/* 训练处方：组数×次数/时长 */
+function prescription(eid){
+ const e=EXERCISES[eid],g=S.plan?.cfg.goal||"keep";
+ const cardio=["rope","bike","treadmill","climb","burpee"];
+ if(eid==="plank")return{sets:3,label:"3组 × 40秒"};
+ if(cardio.includes(eid))return{sets:1,label:g==="cut"?"15-20分钟":"10分钟"};
+ const reps=g==="bulk"?"4组 × 8次":g==="cut"?"3组 × 15次":"3组 × 12次";
+ return{sets:g==="bulk"?4:3,label:reps};
+}
+function restSecs(){const g=S.plan?.cfg.goal;return g==="bulk"?90:g==="cut"?45:60}
+function genPlan(){
+ if(Q.some(([k])=>!setup[k]))return toast("请回答完全部问题");
+ const pool={none:["squat","pushup","lunge","plank","crunch","glute"],
+  db:["squat","pushup","row","press","lunge","rope","crunch"],
+  gym:["squat","row","press","treadmill","bike","rope","crunch"]}[setup.equip];
+ const cardio=setup.equip==="gym"?["treadmill","bike"]:(setup.equip==="db"?["rope"]:["rope","squat"]);
+ const days=+setup.days, mins=+setup.mins;
+ const names=["周一","周二","周三","周四","周五","周六","周日"];
+ const spread={2:[0,3],3:[0,2,4],4:[0,1,3,4],5:[0,1,2,3,4]}[days]||[0,2,4,5,6];
+ let plan=names.map((d,i)=>{
+  if(!spread.includes(i))return{day:d,rest:true,items:[],note:setup.job==="sit"?"休息 · 建议饭后散步 20 分钟":"休息"};
+  const n=Math.max(3,Math.min(6,Math.round(mins/10)));
+  let items=[];
+  if(setup.goal==="cut")items.push(cardio[i%cardio.length]);
+  let j=0;while(items.length<n){const e=pool[(i*2+j)%pool.length];if(!items.includes(e))items.push(e);j++;if(j>20)break;}
+  if(setup.goal==="bulk")items=items.filter(e=>EXERCISES[e].kcal<10).slice(0,n);
+  if(setup.job==="sit"&&!items.includes("glute")&&setup.equip!=="gym")items[items.length-1]="glute";
+  return{day:d,rest:false,items,note:mins+"分钟 · "+(setup.goal==="cut"?"有氧为主":setup.goal==="bulk"?"力量为主":"均衡训练")};
+ });
+ S.plan={cfg:{...setup},days:plan,created:today};
+ S.exLog=S.exLog||{};save();renderTrain();renderHome();toast("计划已生成！");
+}
+/* ============ 训练页（计划+执行） ============ */
+function todayPlan(){const p=S.plan;if(!p)return null;return p.days[(new Date().getDay()+6)%7]}
+function renderTrain(){
+ const p=S.plan;
+ document.getElementById("trainView").innerHTML="";
+ if(!p){renderSetup();return}
+ document.getElementById("planSetup").innerHTML=`<div class="card"><h3>✅ 你的专属周计划</h3><div class="sub">${{cut:"减脂",bulk:"增肌",keep:"保持健康"}[p.cfg.goal]} · 每周${p.cfg.days}练 · 每次约${p.cfg.mins}分钟 · ${{none:"居家徒手",db:"哑铃/跳绳",gym:"健身房"}[p.cfg.equip]} · 组间休息${restSecs()}秒</div><button class="btn ghost" onclick="if(confirm('重新制定会清空当前计划，继续？')){S.plan=null;S.exLog={};save();renderTrain();renderHome()}">重新制定计划</button></div>`;
+ // 今日执行区
+ const tp=todayPlan();
+ let h="";
+ if(tp&&!tp.rest){
+  const log=(S.exLog&&S.exLog[today])||{};
+  let totalSets=0,doneSets=0;
+  tp.items.forEach(e=>{const pr=prescription(e);totalSets+=pr.sets;doneSets+=(log[e]||[]).filter(Boolean).length});
+  h+=`<div class="card"><h3>🎯 今日训练（${tp.note}）</h3>
+   <div class="bar"><i style="width:${totalSets?doneSets/totalSets*100:0}%;background:linear-gradient(90deg,var(--pri),var(--pri2))"></i></div>
+   <div class="sub">已完成 ${doneSets}/${totalSets} 组 · 预计消耗 ${estBurn()} kcal</div></div>`;
+  tp.items.forEach((eid,idx)=>{
+   const e=EXERCISES[eid],pr=prescription(eid);
+   const sets=(log[eid]||[]);
+   let dots="";
+   if(pr.sets===1&&pr.label.includes("分钟")){
+    dots=`<div class="setdot${sets[0]?" done":""}" style="width:auto;padding:0 14px" onclick="toggleSet('${eid}',0)">${sets[0]?"✓ 已完成":"点我完成"}</div>`;
+   }else{
+    for(let s=0;s<pr.sets;s++)dots+=`<div class="setdot${sets[s]?" done":""}" onclick="toggleSet('${eid}',${s})">${s+1}</div>`;
+   }
+   h+=`<div class="trrow"><div class="nm"><span>${idx+1}. ${e.n}</span><span class="pr">${pr.label}</span></div>
+    <div class="sub" style="margin:6px 0">${e.part} · <a style="color:var(--pri2)" onclick="openEx('${eid}')">查看动作指导 ›</a></div>
+    <div style="display:flex;align-items:center;justify-content:space-between"><div>${dots}</div><button class="restbtn" onclick="startRest()">⏱ 休息${restSecs()}s</button></div></div>`;
+  });
+  h+=`<button class="btn big-cta" onclick="finishWorkout()">✅ 完成今日训练</button>`;
+ }else if(tp&&tp.rest){
+  h+=`<div class="card"><h3>😌 今天休息日</h3><div class="sub">${tp.note}。恢复也是训练的一部分！</div></div>`;
+ }
+ // 周计划总览
+ h+='<div class="card"><h3>📅 本周计划</h3>';
+ const wd=(new Date().getDay()+6)%7;
+ p.days.forEach((d,i)=>{
+  h+=`<div class="day"${i===wd?' style="outline:2px solid var(--pri)"':""}><div class="dh"><b>${d.day}${i===wd?" · 今天":""}</b><span class="tag${d.rest?" rest":""}">${d.rest?"休息":d.note}</span></div>`;
+  d.items.forEach(eid=>{h+=`<div class="exitem"><span>${EXERCISES[eid].n}</span><span class="sub">${EXERCISES[eid].part} · ${prescription(eid).label}</span></div>`});
+  h+="</div>"});
+ h+="</div>";
+ document.getElementById("trainView").innerHTML=h;
+}
+function toggleSet(eid,s){
+ S.exLog=S.exLog||{};S.exLog[today]=S.exLog[today]||{};
+ const arr=S.exLog[today][eid]=S.exLog[today][eid]||[];
+ arr[s]=!arr[s];save();renderTrain();
+ if(arr[s]&&navigator.vibrate)navigator.vibrate(40);
+}
+function estBurn(){
+ const tp=todayPlan();if(!tp||tp.rest)return 0;
+ const log=(S.exLog&&S.exLog[today])||{};
+ let b=0;tp.items.forEach(eid=>{const done=(log[eid]||[]).filter(Boolean).length;b+=done*EXERCISES[eid].kcal*(prescription(eid).label.includes("分钟")?12:1)});
+ return Math.round(b);
+}
+function finishWorkout(){
+ const b=estBurn();
+ if(b===0&&!confirm("还没有完成任何组，确定结束吗？"))return;
+ toast(`🎉 今日训练完成，消耗约 ${b} kcal！`);
+ go("home",document.querySelectorAll("nav button")[0]);
+}
+/* 休息计时器 */
+let restTimer=null;
+function startRest(){
+ let s=restSecs();
+ const ov=document.getElementById("timerOverlay"),num=document.getElementById("timerNum");
+ ov.classList.add("on");num.textContent=s;
+ clearInterval(restTimer);
+ restTimer=setInterval(()=>{s--;num.textContent=s;
+  if(s<=3&&s>0)beep(660,0.1);
+  if(s<=0){beep(990,0.4);skipRest();if(navigator.vibrate)navigator.vibrate([100,50,100])}
+ },1000);
+}
+function addRest(x){const num=document.getElementById("timerNum");/* restart with extra */clearInterval(restTimer);let s=parseInt(num.textContent)+x;const ov=document.getElementById("timerOverlay");ov.classList.add("on");num.textContent=s;restTimer=setInterval(()=>{s--;num.textContent=s;if(s<=3&&s>0)beep(660,0.1);if(s<=0){beep(990,0.4);skipRest()}},1000)}
+function skipRest(){clearInterval(restTimer);document.getElementById("timerOverlay").classList.remove("on")}
+function beep(f,d){try{const ac=new(window.AudioContext||window.webkitAudioContext)();const o=ac.createOscillator(),g=ac.createGain();o.frequency.value=f;o.connect(g);g.connect(ac.destination);g.gain.setValueAtTime(0.25,ac.currentTime);o.start();o.stop(ac.currentTime+d)}catch(e){}}
+/* ============ 今日驾驶舱 ============ */
+function streak(){
+ let n=0;
+ for(let i=0;i>-365;i--){
+  const d=dstr(i);
+  const hasEx=S.exLog&&S.exLog[d]&&Object.values(S.exLog[d]).some(a=>a.some(Boolean));
+  const hasDiet=S.diet&&S.diet[d]&&S.diet[d].length>0;
+  if(hasEx||hasDiet)n++;else if(i<0||n===0){if(i===0)continue;break}
+ }
+ return n;
+}
+function dayStats(){
+ const tp=todayPlan();
+ const log=(S.exLog&&S.exLog[today])||{};
+ let tot=0,done=0;
+ if(tp&&!tp.rest)tp.items.forEach(e=>{tot+=prescription(e).sets;done+=(log[e]||[]).filter(Boolean).length});
+ const meals=(S.diet&&S.diet[today])||[];
+ return{tot,done,burn:estBurn(),eat:meals.reduce((a,m)=>a+m.kcal,0)};
+}
+function renderHome(){
+ const st=streak();
+ document.getElementById("streakBox").innerHTML=`<b>🔥 ${st}</b><div><div style="font-weight:600">连续打卡 ${st} 天</div><div class="sub">${st>=7?"太稳了，继续保持！":st>=3?"势头不错，别断档！":"今天记录训练或饮食即可打卡"}</div></div>`;
+ const tp=todayPlan(),p=S.plan;
+ let tc;
+ if(!p)tc=`<h3>🎯 开始之前</h3><div class="sub">你还没有健身计划，先去「训练」页花 30 秒生成专属计划。</div>`;
+ else if(tp.rest)tc=`<h3>😌 今日休息</h3><div class="sub">${tp.note}</div>`;
+ else{
+  const s=dayStats();
+  tc=`<h3>🎯 今日训练 · ${tp.note}</h3>
+   <div class="sub" style="margin-bottom:6px">${tp.items.map(e=>EXERCISES[e].n).join("、")}</div>
+   <div class="bar"><i style="width:${s.tot?s.done/s.tot*100:0}%;background:linear-gradient(90deg,var(--pri),var(--pri2))"></i></div>
+   <div class="sub">已完成 ${s.done}/${s.tot} 组</div>
+   <button class="btn big-cta" onclick="go('train',document.querySelectorAll('nav button')[1])">${s.done>0?"继续训练 ▶":"开始训练 ▶"}</button>`;
+ }
+ document.getElementById("todayTrainCard").innerHTML=tc;
+ const s=dayStats();
+ document.getElementById("homeStat").innerHTML=`<div><b>${s.burn}</b><span>运动消耗 kcal</span></div><div><b>${s.eat}</b><span>饮食摄入 kcal</span></div><div><b>${S.weights&&S.weights.length?S.weights[S.weights.length-1].w:"--"}</b><span>最新体重 kg</span></div>`;
+ renderWTrend();
+}
+function renderWTrend(){
+ const w=(S.weights||[]).slice(-7);
+ if(!w.length){document.getElementById("wTrend").innerHTML='<div class="sub">记录 2 天以上可看到趋势图</div>';return}
+ if(w.length===1){document.getElementById("wTrend").innerHTML=`<div class="sub">${w[0].d.slice(5)}：${w[0].w} kg</div>`;return}
+ const min=Math.min(...w.map(x=>x.w)),max=Math.max(...w.map(x=>x.w)),rng=(max-min)||1;
+ const pts=w.map((x,i)=>`${20+i*(360/(w.length-1))},${70-(x.w-min)/rng*55}`).join(" ");
+ document.getElementById("wTrend").innerHTML=`<svg viewBox="0 0 400 90" style="width:100%;background:#0d1220;border-radius:10px"><polyline points="${pts}" fill="none" stroke="#4ade80" stroke-width="2.5"/>${w.map((x,i)=>`<circle cx="${20+i*(360/(w.length-1))}" cy="${70-(x.w-min)/rng*55}" r="3.5" fill="#4ade80"/>`).join("")}<text x="20" y="86" font-size="10" fill="#8b96ab">${w[0].d.slice(5)}</text><text x="380" y="86" font-size="10" fill="#8b96ab" text-anchor="end">${w[w.length-1].d.slice(5)} · ${w[w.length-1].w}kg</text></svg>`;
+}
+function logWeight(){
+ const w=parseFloat(document.getElementById("quickW").value);
+ if(!w||w<30||w>250)return toast("请输入有效体重");
+ S.weights=(S.weights||[]).filter(x=>x.d!==today);
+ S.weights.push({d:today,w});S.weights.sort((a,b)=>a.d<b.d?-1:1);
+ if(!S.user)S.user={};S.user.weight=w;
+ save();document.getElementById("quickW").value="";renderHome();toast("体重已记录 "+w+" kg");
+}
+/* ============ 动作库 ============ */
+function bodyFig(cx){
+ const s='stroke="#3a4763" stroke-width="4" stroke-linecap="round" fill="none"';
+ return `<circle cx="${cx}" cy="42" r="14" fill="#1a2233" stroke="#3a4763" stroke-width="4"/>
+ <path d="M${cx} 56 L${cx} 160" ${s}/>
+ <path d="M${cx} 70 L${cx-38} 95 M${cx} 70 L${cx+38} 95" ${s}/>
+ <path d="M${cx-38} 95 L${cx-44} 140 M${cx+38} 95 L${cx+44} 140" ${s}/>
+ <path d="M${cx} 160 L${cx-18} 225 M${cx} 160 L${cx+18} 225" ${s}/>
+ <path d="M${cx-18} 225 L${cx-16} 285 M${cx+18} 225 L${cx+16} 285" ${s}/>`;
+}
+function muscleSVG(exId){
+ const m=EX_MUSCLE[exId]||{pm:[],sm:[]};
+ let el="";
+ Object.entries(MUSCLE_POS).forEach(([name,pos])=>{
+  const isP=m.pm.includes(name),isS=m.sm.includes(name);
+  const fill=isP?"#ef4444":isS?"#fb923c":"#2b3550";
+  const op=isP||isS?"0.95":"0.5";
+  pos.forEach(([x,y,rx,ry])=>{el+=`<ellipse cx="${x}" cy="${y}" rx="${rx}" ry="${ry}" fill="${fill}" opacity="${op}"/>`});
+ });
+ return `<svg viewBox="0 0 400 300">${bodyFig(100)}${bodyFig(300)}${el}
+ <text x="100" y="298" font-size="11" fill="#8b96ab" text-anchor="middle">正面</text>
+ <text x="300" y="298" font-size="11" fill="#8b96ab" text-anchor="middle">背面</text></svg>`;
+}
+function animFig(t){
+ const st='stroke="#4ade80" stroke-width="5" stroke-linecap="round" fill="none"';
+ const H=(x,y)=>`<circle cx="${x}" cy="${y}" r="12" ${st}/>`;
+ const L=(x1,y1,x2,y2)=>`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" ${st}/>`;
+ const DB=(x,y)=>`<rect x="${x-6}" y="${y-8}" width="13" height="15" rx="3" fill="#22d3ee"/>`;
+ const rot=(cx,cy,a1,a2,dur)=>`<animateTransform attributeName="transform" type="rotate" values="${a1} ${cx} ${cy};${a2} ${cx} ${cy};${a1} ${cx} ${cy}" dur="${dur}" repeatCount="indefinite"/>`;
+ const tra=(y1,y2,dur)=>`<animateTransform attributeName="transform" type="translate" values="0 ${y1};0 ${y2};0 ${y1}" dur="${dur}" repeatCount="indefinite"/>`;
+ let inner="";
+ switch(t){
+ case "squat":
+  inner=`<g>${L(100,95,75,122)}${L(75,122,78,148)}${L(100,95,125,122)}${L(125,122,122,148)}</g><g>${tra(0,16,"1.4s")}${H(100,38)}${L(100,51,100,95)}${L(100,62,72,88)}${L(100,62,128,88)}</g>`;break;
+ case "pushup":
+  inner=`<g>${rot(168,95,0,-11,"1.4s")}${H(58,58)}${L(70,64,140,72)}${L(140,72,168,95)}${L(84,66,96,95)}${L(160,60,172,95)}</g>`;break;
+ case "press":
+  inner=`${H(100,38)}${L(100,51,100,95)}${L(100,95,85,148)}${L(100,95,115,148)}<g>${rot(100,60,0,-100,"1.5s")}${L(100,60,78,92)}${DB(78,98)}</g><g>${rot(100,60,0,100,"1.5s")}${L(100,60,122,92)}${DB(122,98)}</g>`;break;
+ case "latraise":
+  inner=`${H(100,38)}${L(100,51,100,95)}${L(100,95,85,148)}${L(100,95,115,148)}<g>${rot(100,60,0,-85,"1.5s")}${L(100,60,78,95)}${DB(78,101)}</g><g>${rot(100,60,0,85,"1.5s")}${L(100,60,122,95)}${DB(122,101)}</g>`;break;
+ case "fly":
+  inner=`${H(100,38)}${L(100,51,100,90)}${L(100,90,85,148)}${L(100,90,115,148)}<g>${rot(100,62,0,45,"1.6s")}${L(100,62,55,52)}${DB(49,50)}</g><g>${rot(100,62,0,-45,"1.6s")}${L(100,62,145,52)}${DB(151,50)}</g>`;break;
+ case "row":
+  inner=`${H(100,38)}${L(100,51,114,86)}${L(114,86,100,122)}${L(114,86,136,116)}${L(100,122,100,148)}${L(136,116,150,140)}<g>${rot(110,64,0,-50,"1.3s")}${L(108,64,140,78)}${DB(144,82)}</g>`;break;
+ case "curl":
+  inner=`${H(100,38)}${L(100,51,100,95)}${L(100,95,85,148)}${L(100,95,115,148)}${L(100,60,80,90)}<g>${rot(80,90,0,-110,"1.2s")}${L(80,90,82,120)}${DB(84,124)}</g>${L(100,60,120,90)}${L(120,90,118,120)}`;break;
+ case "deadlift":
+  inner=`${L(100,95,85,148)}${L(100,95,115,148)}<g>${rot(100,95,0,38,"1.6s")}${H(100,38)}${L(100,51,100,95)}${L(100,70,86,120)}${DB(84,124)}${L(100,70,114,120)}${DB(120,124)}</g>`;break;
+ case "calf":
+  inner=`<g>${tra(0,-7,"0.8s")}${H(100,38)}${L(100,51,100,95)}${L(100,62,75,85)}${L(100,62,125,85)}${L(100,95,88,145)}${L(100,95,112,145)}</g>`;break;
+ case "rope":
+  inner=`<g>${tra(0,-9,"0.55s")}${H(100,38)}${L(100,51,100,92)}${L(100,62,78,85)}${L(100,62,122,85)}${L(100,92,88,122)}${L(100,92,112,122)}</g><g><animateTransform attributeName="transform" type="rotate" from="0 100 120" to="360 100 120" dur="0.55s" repeatCount="indefinite"/><path d="M78 85 Q40 150 100 158 Q160 150 122 85" fill="none" stroke="#22d3ee" stroke-width="3" stroke-dasharray="5 4"/></g>`;break;
+ case "crunch":
+  inner=`${L(105,88,140,62)}${L(140,62,168,78)}${L(105,88,150,95)}<g>${rot(105,88,0,-28,"1.3s")}${H(48,72)}${L(60,76,105,88)}</g>`;break;
+ case "glute":
+  inner=`${L(128,88,160,62)}${L(160,62,165,88)}<g>${tra(0,-10,"1.3s")}${H(30,80)}${L(42,82,128,88)}${L(60,80,48,98)}</g>`;break;
+ case "plank":
+  inner=`<g><animate attributeName="opacity" values="1;0.75;1" dur="1.5s" repeatCount="indefinite"/>${H(26,72)}${L(38,78,120,80)}${L(120,80,168,62)}${L(46,78,52,100)}${L(160,64,172,95)}</g>`;break;
+ case "climb":
+  inner=`${H(26,72)}${L(38,78,118,80)}${L(46,78,52,100)}<g>${rot(118,80,0,-30,"0.5s")}${L(118,80,168,60)}</g><g>${rot(118,80,-30,0,"0.5s")}${L(118,80,150,100)}</g>`;break;
+ case "burpee":
+  inner=`<g>${tra(0,20,"1.1s")}${H(100,38)}${L(100,51,100,95)}${L(100,62,75,80)}${L(100,62,125,80)}${L(100,95,85,145)}${L(100,95,115,145)}</g>`;break;
+ case "lunge":
+  inner=`<g>${tra(0,14,"1.4s")}${H(100,38)}${L(100,51,100,92)}${L(100,60,76,82)}${L(100,60,124,82)}${L(100,92,70,116)}${L(70,116,72,148)}${L(100,92,134,118)}${L(134,118,160,118)}</g>`;break;
+ case "bike":
+  inner=`<circle cx="60" cy="118" r="24" fill="none" stroke="#4ade80" stroke-width="5"/><circle cx="150" cy="118" r="24" fill="none" stroke="#4ade80" stroke-width="5"/>${L(60,118,105,118)}${L(130,76,150,118)}${L(130,76,146,72)}${H(98,42)}${L(98,53,112,86)}<g><animateTransform attributeName="transform" type="rotate" from="0 105 118" to="360 105 118" dur="1s" repeatCount="indefinite"/>${L(105,118,95,132)}${L(105,118,115,104)}</g>${L(112,86,105,118)}`;break;
+ case "treadmill":
+  inner=`${L(20,122,150,122)}${L(150,122,150,55)}${L(150,55,170,55)}${H(95,36)}${L(95,47,92,80)}${L(95,56,125,60)}<g>${rot(92,80,-25,25,"0.55s")}${L(92,80,75,116)}</g><g>${rot(92,80,25,-25,"0.55s")}${L(92,80,115,114)}</g>`;break;
+ default:
+  inner=`${H(100,38)}${L(100,51,100,95)}${L(100,62,75,85)}${L(100,62,125,85)}${L(100,95,85,148)}${L(100,95,115,148)}`;
+ }
+ return `<svg viewBox="0 0 200 165">${inner}</svg>`;
+}
+let curPart="胸";
+const PARTS=["胸","肩","背","手臂","臀腿","核心","有氧/全身"];
+function renderExGrid(){
+ document.getElementById("partRow").innerHTML=PARTS.map(p=>`<div class="chip${p===curPart?" sel":""}" onclick="curPart='${p}';renderExGrid()">${p}</div>`).join("");
+ const list=Object.entries(EXERCISES).filter(([id,e])=>e.part===curPart||(curPart==="核心"&&["腹","核心"].includes(e.part))||(curPart==="有氧/全身"&&["有氧","有氧/全身"].includes(e.part)));
+ document.getElementById("exList").innerHTML=`<div class="card"><h3>练${curPart}（${list.length}个动作）</h3></div><div class="grid2">`+list.map(([id,e])=>`<div class="card exc" onclick="openEx('${id}')">${animFig(e.svg)}<b>${e.n}</b><span class="sub">${e.eq} · 约${e.kcal}kcal/分钟</span></div>`).join("")+"</div>";
+}
+function openEx(id){const e=EXERCISES[id];const m=EX_MUSCLE[id]||{pm:[],sm:[]};
+ document.getElementById("sheet").innerHTML=`<button class="close" onclick="closeModal()">✕</button><h3>${e.n}</h3><div class="sub">${e.eq} · 主要锻炼：${e.part} · 约${e.kcal} kcal/分钟</div>
+ <h3 style="font-size:14px;margin:14px 0 4px">🎬 动作演示（动图）</h3>${animFig(e.svg)}
+ <h3 style="font-size:14px;margin:6px 0 4px">💪 发力肌肉</h3>
+ <div class="row" style="margin:6px 0">${m.pm.map(x=>`<span class="tag" style="background:#ef444422;color:#ef4444">● 主动：${x}</span>`).join("")}${m.sm.map(x=>`<span class="tag" style="background:#fb923c22;color:#fb923c">● 协同：${x}</span>`).join("")}</div>
+ ${muscleSVG(id)}
+ <h3 style="font-size:14px;margin:10px 0 6px">📖 动作要领</h3><ol class="steps">${e.steps.map(s=>`<li>${s}</li>`).join("")}</ol><div class="warnbox">⚠️ ${e.tips}</div>`;
+ document.getElementById("modal").classList.add("on");}
+function closeModal(){document.getElementById("modal").classList.remove("on")}
+/* ============ 饮食 ============ */
+let selMeal="早餐",selFoods=new Set(),curSug="out";
+const MEALS=["早餐","午餐","晚餐","加餐"];
+function kcalTarget(){if(S.user?.target)return S.user.target;const w=S.user?.weight||65;const g=S.plan?.cfg.goal;return Math.round(w*(g==="cut"?25:g==="bulk"?40:33))}
+function renderDiet(){
+ document.getElementById("mealTypeRow").innerHTML=MEALS.map(m=>`<div class="chip${m===selMeal?" sel":""}" onclick="selMeal='${m}';renderDiet()">${m}</div>`).join("");
+ document.getElementById("foodRow").innerHTML=Object.entries(FOODS).map(([f,v])=>`<div class="chip${selFoods.has(f)?" sel":""}" data-f="${f}" onclick="toggleFood(this,'${f}')">${f} ${v[0]}</div>`).join("");
+ const meals=(S.diet&&S.diet[today])||[];
+ const total=meals.reduce((a,m)=>a+m.kcal,0),t=kcalTarget();
+ const P=meals.reduce((a,m)=>a+(m.p||0),0),C=meals.reduce((a,m)=>a+(m.c||0),0),F=meals.reduce((a,m)=>a+(m.f||0),0);
+ document.getElementById("kIn").textContent=total;
+ document.getElementById("kTarget").textContent=t;
+ document.getElementById("kLeft").textContent=Math.max(0,t-total);
+ document.getElementById("kBar").style.width=Math.min(100,total/t*100)+"%";
+ const g=S.plan?.cfg.goal;
+ const pGoal=g==="bulk"?"1.6-2g/kg体重":g==="cut"?"1.2-1.5g/kg体重":"0.8-1g/kg体重";
+ document.getElementById("kTip").textContent=total>t?"⚠️ 已超出目标 "+(total-t)+" kcal，晚餐清淡些或多走 20 分钟":"继续保持。蛋白质建议摄入："+pGoal;
+ document.getElementById("macroBox").innerHTML=`<div><b style="color:#f87171">${Math.round(P)}g</b><span class="sub">蛋白质</span></div><div><b style="color:#fbbf24">${Math.round(C)}g</b><span class="sub">碳水</span></div><div><b style="color:#22d3ee">${Math.round(F)}g</b><span class="sub">脂肪</span></div>`;
+ document.getElementById("mealList").innerHTML=meals.length?meals.map((m,i)=>`<div class="meal"><span><b style="color:var(--pri2)">${m.type}</b> ${m.name}</span><span class="k">${m.kcal}kcal${m.p?` · 蛋${m.p}g`:""}</span><span class="del" onclick="delMeal(${i})">×</span></div>`).join(""):'<div class="sub">还没有记录，先添加一餐吧～</div>';
+ showSug(curSug,null,true);
+}
+function toggleFood(el,f){el.classList.toggle("sel");el.classList.contains("sel")?selFoods.add(f):selFoods.delete(f)}
+function showSug(kind,el){curSug=kind;
+ if(el){el.parentElement.querySelectorAll(".chip").forEach(c=>c.classList.remove("sel"));el.classList.add("sel")}
+ const goal=S.plan?.cfg.goal||"keep";
+ document.getElementById("sugBox").innerHTML=SUG[kind][goal].map(s=>`<div class="sug">${s}</div>`).join("")+`<div class="sub">根据你的「${{cut:"减脂",bulk:"增肌",keep:"保持健康"}[goal]}」目标推荐${kind==="out"?"外卖":"家常菜"}。</div>`;
+}
+function addMeal(){
+ let items=[...selFoods].map(f=>{const v=FOODS[f];return{type:selMeal,name:f,kcal:v[0],p:v[1],c:v[2],f:v[3]}});
+ const mn=document.getElementById("mName").value.trim(),mk=parseInt(document.getElementById("mKcal").value);
+ if(mn&&mk)items.push({type:selMeal,name:mn,kcal:mk});
+ if(!items.length)return toast("请选择食物或手动输入");
+ S.diet=S.diet||{};S.diet[today]=(S.diet[today]||[]).concat(items);
+ selFoods.clear();document.getElementById("mName").value="";document.getElementById("mKcal").value="";
+ save();renderDiet();toast("已记录 +"+items.reduce((a,m)=>a+m.kcal,0)+" kcal");
+}
+function delMeal(i){S.diet[today].splice(i,1);save();renderDiet()}
+function copyYesterday(){
+ const y=(S.diet&&S.diet[dstr(-1)])||[];
+ if(!y.length)return toast("昨天没有饮食记录");
+ S.diet[today]=(S.diet[today]||[]).concat(y.map(m=>({...m})));
+ save();renderDiet();toast("已复制昨天的 "+y.length+" 条记录");
+}
+/* ============ 我的 ============ */
+function saveUser(){S.user=S.user||{};S.user.height=parseFloat(document.getElementById("uHeight").value)||null;S.user.target=parseInt(document.getElementById("uTarget").value)||null;save();renderMe();toast("已保存")}
+function renderMe(){
+ if(S.user){document.getElementById("uHeight").value=S.user.height||"";document.getElementById("uTarget").value=S.user.target||""}
+ const h=S.user?.height,w=S.user?.weight;
+ document.getElementById("bmiBox").innerHTML=(h&&w)?(()=>{const b=(w/((h/100)**2)).toFixed(1);const lv=b<18.5?"偏瘦":b<24?"正常 ✅":b<28?"超重":"肥胖";return `<div class="sub">BMI：<b style="color:var(--pri)">${b}</b>（${lv}）</div>`})():'';
+ const ws=(S.weights||[]).slice(-10).reverse();
+ document.getElementById("wList").innerHTML=ws.length?ws.map(x=>`<div class="wrow"><span>${x.d}</span><b>${x.w} kg</b></div>`).join(""):'<div class="sub">暂无记录，去「今日」页记录体重</div>';
+ let wl="";
+ for(let i=0;i>-7;i--){
+  const d=dstr(i);
+  const ex=S.exLog&&S.exLog[d]?Object.values(S.exLog[d]).flat().filter(Boolean).length:0;
+  const eat=(S.diet&&S.diet[d]||[]).reduce((a,m)=>a+m.kcal,0);
+  wl+=`<div class="wrow"><span>${d.slice(5)}${i===0?" (今天)":""}</span><span class="sub">训练${ex}组 · 摄入${eat}kcal</span></div>`;
+ }
+ document.getElementById("weekList").innerHTML=wl;
+}
+function exportData(){
+ const blob=new Blob([JSON.stringify(S,null,1)],{type:"application/json"});
+ const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="fitcoach-backup-"+today+".json";a.click();
+ toast("备份文件已下载");
+}
+function importData(){
+ try{const d=JSON.parse(document.getElementById("impBox").value);
+  if(typeof d!=="object"||!d)throw 0;
+  Object.assign(S,d);save();location.reload();
+ }catch(e){toast("JSON 格式不正确")}
+}
+/* ============ 打卡图 v2 ============ */
+function roundRect(x,xx,y,w,h,r){x.beginPath();x.moveTo(xx+r,y);x.arcTo(xx+w,y,xx+w,y+h,r);x.arcTo(xx+w,y+h,xx,y+h,r);x.arcTo(xx,y+h,xx,y,r);x.arcTo(xx,y,xx+w,y,r);x.closePath()}
+function genCard(){
+ const s=dayStats(),st=streak(),cv=document.getElementById("shareCv"),x=cv.getContext("2d");
+ const grd=x.createLinearGradient(0,0,750,1050);grd.addColorStop(0,"#0f1420");grd.addColorStop(1,"#1a2b22");
+ x.fillStyle=grd;x.fillRect(0,0,750,1050);
+ x.strokeStyle="#4ade8044";x.lineWidth=2;for(let i=0;i<8;i++){x.beginPath();x.arc(375,440,120+i*55,0,7);x.stroke()}
+ x.fillStyle="#4ade80";x.font="bold 46px Arial";x.textAlign="center";
+ x.fillText("FitCoach · 健身打卡",375,110);
+ x.fillStyle="#8b96ab";x.font="26px Arial";
+ x.fillText(new Date().toLocaleDateString("zh-CN",{year:"numeric",month:"long",day:"numeric",weekday:"long"}),375,160);
+ x.fillStyle="#fbbf24";x.font="bold 34px Arial";
+ x.fillText("🔥 连续打卡 "+st+" 天",375,220);
+ const stat=(y,v,l)=>{x.fillStyle="#4ade80";x.font="bold 60px Arial";x.fillText(v,375,y);x.fillStyle="#8b96ab";x.font="24px Arial";x.fillText(l,375,y+40)};
+ x.fillStyle="#ffffff10";roundRect(x,125,260,500,560,28);x.fill();
+ stat(370,s.tot?s.done+"/"+s.tot+" 组":"休息日","训练完成");
+ stat(520,s.burn+"","运动消耗 kcal");
+ stat(670,s.eat+"","饮食摄入 kcal");
+ const w=S.user?.weight;
+ stat(800,w?w+" kg":"--","当前体重");
+ const goal=S.plan?.cfg.goal||"keep";
+ x.fillStyle="#e8edf5";x.font="28px Arial";
+ x.fillText("目标："+{cut:"减脂 🔥",bulk:"增肌 💪",keep:"保持健康 🌿"}[goal],375,870);
+ x.fillStyle="#22d3ee";x.font="bold 30px Arial";
+ const phrase=s.tot&&s.done>=s.tot?"今日训练全部完成，坚持就是胜利！":s.tot?"每一步都算数，明天继续加油！":"休息也是训练的一部分。";
+ x.fillText(phrase,375,920);
+ x.fillStyle="#8b96ab";x.font="20px Arial";x.fillText("—— 来自 FitCoach 健身助手 ——",375,1000);
+ const img=document.getElementById("shareImg");
+ img.src=cv.toDataURL("image/png");img.style.display="block";
+ document.getElementById("dlBtn").style.display="block";
+ toast("打卡图已生成，长按可保存");
+}
+function dlCard(){const a=document.createElement("a");a.download="fitcoach-"+today+".png";a.href=document.getElementById("shareCv").toDataURL("image/png");a.click()}
+/* init */
+renderTrain();renderExGrid();renderDiet();renderHome();
+</script>
+</body>
+</html>
